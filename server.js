@@ -18,7 +18,7 @@ const express    = require('express'),
       app    = express(),
       hbs    = exphbs.create({ defaultLayout: 'main', extname: '.hbs' }),
       PORT   = process.env.PORT || 3000,
-      DB_URI = process.env.MONGODB_URI || require('./mongodb_uri.json').LOCAL_URI;
+      DB_URI = process.env.MONGODB_URI || require("mongodb://localhost/mongoHeadlines");
 
 // Handlebars init
 app.engine('.hbs', hbs.engine);
