@@ -18,7 +18,7 @@ const express    = require('express'),
       app    = express(),
       hbs    = exphbs.create({ defaultLayout: 'main', extname: '.hbs' }),
       PORT   = process.env.PORT || 3000,
-      DB_URI = process.env.MONGODB_URI || require("mongodb://localhost/mongoHeadlines");
+      MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 
 // Handlebars init
 app.engine('.hbs', hbs.engine);
@@ -39,7 +39,7 @@ app.use(express.static(process.cwd() + '/public'));
 
 // Mongoose init
 mongoose.Promise = Promise;
-mongoose.connect(DB_URI);
+mongoose.connect(MONGODB_URI);
 const db = mongoose.connection;
 
 db.on('error', function (err) {
