@@ -1,12 +1,17 @@
-'use strict';
+var mongoose = require('mongoose');
 
-const mongoose = require("mongoose"),
-      Schema   = mongoose.Schema;
+var Schema = mongoose.Schema;
 
-const CommentSchema = new Schema({
-  comment: {
+var CommentSchema = new Schema({
+  name: {
     type: String
   },
+  body: {
+    type: String,
+    required: true
+  }
 });
 
-module.exports = mongoose.model("Comment", CommentSchema);
+var Comment = mongoose.model("Comment", CommentSchema);
+
+module.exports = Comment;

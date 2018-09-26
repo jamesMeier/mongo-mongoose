@@ -1,33 +1,23 @@
-'use strict';
+var mongoose = require('mongoose');
 
-const mongoose = require("mongoose"),
-      Schema   = mongoose.Schema;
+var Schema = mongoose.Schema;
 
-const ArticleSchema = new Schema({
+var ArticleSchema = new Schema({
   title: {
     type: String,
     required: true
   },
-
-  summary: {
-    type: String,
-    required: true
-  },
-
   link: {
     type: String,
     required: true
   },
-
-  date: {
-    type: Date,
-    default: Date.now
-  },
-  
-  comments: [{
+  comment: [{
     type: Schema.Types.ObjectId,
     ref: "Comment"
   }]
 });
 
-module.exports = mongoose.model("Article", ArticleSchema);
+var Article = mongoose.model("Article", ArticleSchema);
+
+//export model
+module.exports = Article;

@@ -1,145 +1,46 @@
-'use strict';
+//dependencies
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var logger = require('morgan');
 
-// Modules
-const express    = require('express'),
-      exphbs     = require('express-handlebars'),
-      bodyParser = require('body-parser'),
-      logger     = require('morgan'),
-      mongoose   = require('mongoose'),
-      Promise    = require('bluebird'),
-      cheerio    = require('cheerio'),
-      rp         = require('request-promise'),
+//initialize Express app
+var express = require('express');
+var app = express();
 
-      // Local dependencies
-      Article    = require('./models/Article.js'),
-      Comment    = require('./models/Comment.js'),
-
-      // Const vars
-      app    = express(),
-      hbs    = exphbs.create({ defaultLayout: 'main', extname: '.hbs' }),
-      PORT   = process.env.PORT || 3000,
-      MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
-
-// Handlebars init
-app.engine('.hbs', hbs.engine);
-app.set('view engine', '.hbs');
-if (process.env.PORT) app.enable('view cache');  // Disable view cache for local testing
-
-// Morgan for logging
 app.use(logger('dev'));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 
-// Body parser init
-app.use(bodyParser.json());
-app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.text());
-
-// Route for static content
 app.use(express.static(process.cwd() + '/public'));
 
-// Mongoose init
+var exphbs = require('express-handlebars');
+app.engine('handlebars', exphbs({
+  defaultLayout: 'main'
+}));
+app.set('view engine', 'handlebars');
+
+//connecting to MongoDB
+//mongoose.connect('mongodb://heroku_jxkjhg1v:6s68tem51mlionrj2sneb7b53c@ds127988.mlab.com:27988/heroku_jxkjhg1v');
+
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scraped_news";
+
+// Set mongoose to leverage built in JavaScript ES6 Promises
+// Connect to the Mongo DB
 mongoose.Promise = Promise;
 mongoose.connect(MONGODB_URI);
-const db = mongoose.connection;
-
-db.on('error', function (err) {
-  console.log('Mongoose Error: ', err);
-});
-
-db.once('open', function () {
-  console.log('Mongoose connection successful.');
-});
 
 
+// var db = mongoose.connection;
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', function() {
+//   console.log('Connected to Mongoose!')
+// });
 
-// Render main site index
-app.get('/', (req, res) => {
-  rp('http://www.nytimes.com/pages/todayspaper').then(html => {
-    const $ = cheerio.load(html),
-          promises = [];
+var routes = require('./controller/controller.js');
+app.use('/', routes);
 
-    $('h3').each(function(i, element) {
-      const link    = $(element).find('a').attr('href'),
-            title   = $(element).find('a').text().trim(),
-            summary = $(element).next().next().text().trim();
-
-      if (title) {
-        promises.unshift(new Promise((resolve, reject) => {
-          Article.update(
-            { link: link },   // only create new entry if link does not exist in Articles
-            { $setOnInsert:
-              {
-                link: link,
-                title: title,
-                summary: summary
-              }                 
-            },
-            {
-              upsert: true,
-              setDefaultsOnInsert: true
-            }
-          ).then(article => 
-            resolve(article)
-          );
-        }));
-      }
-    });
-
-    // When all updates are resolved, continue
-    Promise.all(promises).then(() => 
-      Article.find({}).sort({ date: 1 }).limit(1).populate('comments').exec((err, doc) => 
-        res.render('index', {article: doc[0]})
-      )
-    );
-  });
-});
-
-
-// Additional routes
-app.get('/articles', (req, res) => {
-  Article.find({}).sort({ date: 1 }).limit(10).populate('comments').exec((err, docs) => 
-    res.json(docs)
-  )
-});
-
-app.get('/comments/:id', (req, res) => {
-  Article.findById(req.params.id).populate('comments').exec((err, doc) => 
-    res.json(doc.comments)
-  )
-});
-
-app.post('/', (req, res) => {
-  Comment.create({comment: req.body.comment}).then(comment => {
-    console.log(comment);
-    Article.findByIdAndUpdate(
-      req.body.id,
-      { $push: { "comments": comment._id } }
-    ).then(() => 
-      res.json(comment)
-    )
-  })
-});
-
-app.delete('/', (req, res) => {
-  Article.findById(req.body.id).then(article => {
-    const promises = [];
-
-    for (const id of article.comments) {
-      promises.push(new Promise((resolve, reject) => {
-        Comment.remove({ _id: id}).then(data => resolve(data));
-      }));
-    }
-
-    Promise.all(promises).then(data => {
-      article.comments = [];
-      article.save().then(() => res.json(data));
-    });
-  })
-});
-
-
-
-// Init server
-app.listen(PORT, function () {
-  console.log(`App listening on port ${PORT}`);
+var port = process.env.PORT || 3000;
+app.listen(port, function(){
+  console.log('Listening on PORT ' + port);
 });
