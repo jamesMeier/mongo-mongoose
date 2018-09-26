@@ -21,7 +21,7 @@ app.engine('handlebars', exphbs({
 app.set('view engine', 'handlebars');
 
 //connecting to MongoDB
-//mongoose.connect('mongodb://heroku_jxkjhg1v:6s68tem51mlionrj2sneb7b53c@ds127988.mlab.com:27988/heroku_jxkjhg1v');
+//mongoose.connect('mongodb://heroku_9md6j5nh:kkl5lbiu7s5aaj5psag8b10e85@ds113853.mlab.com:13853/heroku_9md6j5nh');
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scraped_news";
 
@@ -30,12 +30,6 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scraped_news";
 mongoose.Promise = Promise;
 mongoose.connect(MONGODB_URI);
 
-
-// var db = mongoose.connection;
-// db.on('error', console.error.bind(console, 'connection error:'));
-// db.once('open', function() {
-//   console.log('Connected to Mongoose!')
-// });
 
 var routes = require('./controller/controller.js');
 app.use('/', routes);
